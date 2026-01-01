@@ -14,6 +14,19 @@ const ProposalSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    status: {
+      type: String,
+      enum: ["pending", "accepted", "rejected"],
+      default: "pending",
+    },
+    escrow: {
+      funded: { type: Boolean, default: false },
+      amount: { type: Number },
+      currency: { type: String },
+      solAmount: { type: Number },
+      txSignature: { type: String },
+      updatedAt: { type: Date }
+    }
   },
   { timestamps: true }
 );

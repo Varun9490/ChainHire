@@ -45,7 +45,7 @@ import {
 import ContractDraftingVisual from "@/components/ui/ContractDraftingVisual";
 
 export default function FreelanceSOLLanding() {
-  // App state
+  // ---------- App state ----------
   const [mobileOpen, setMobileOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -55,22 +55,28 @@ export default function FreelanceSOLLanding() {
   const [showTop, setShowTop] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
 
-  // Refs for sections to track visibility
+  // ---------- Section refs (stable across renders) ----------
+  const heroRef = useRef(null);
+  const featuresRef = useRef(null);
+  const escrowRef = useRef(null);
+  const pricingRef = useRef(null);
+  const faqRef = useRef(null);
+
   const sectionRefs = {
-    hero: useRef(null),
-    features: useRef(null),
-    escrow: useRef(null),
-    pricing: useRef(null),
-    faq: useRef(null),
+    hero: heroRef,
+    features: featuresRef,
+    escrow: escrowRef,
+    pricing: pricingRef,
+    faq: faqRef,
   };
 
-  // Simulate loading state
+  // ---------- Simulate loading state for hero card ----------
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 1200);
     return () => clearTimeout(t);
   }, []);
 
-  // Handle scroll events
+  // ---------- Scroll listeners / active-section detection ----------
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -78,9 +84,12 @@ export default function FreelanceSOLLanding() {
       setScrolled(window.scrollY > 8);
       setShowTop(window.scrollY > 400);
 
+      // Determine which section is currently in view
       const current = Object.entries(sectionRefs).find(([_, ref]) => {
-        if (!ref.current) return false;
-        const rect = ref.current.getBoundingClientRect();
+        const el = ref.current;
+        if (!el) return false;
+        const rect = el.getBoundingClientRect();
+        // The 100px threshold provides a nice, stable highlight
         return rect.top <= 100 && rect.bottom >= 100;
       });
 
@@ -89,12 +98,15 @@ export default function FreelanceSOLLanding() {
       }
     };
 
+    // Initialize on mount
     requestAnimationFrame(onScroll);
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [sectionRefs]);
+    // Intentionally no deps; refs are stable objects
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Scroll progress bar
+  // ---------- Scroll progress bar ----------
   const { scrollYProgress } = useScroll();
   const width = useSpring(scrollYProgress, {
     stiffness: 120,
@@ -102,12 +114,12 @@ export default function FreelanceSOLLanding() {
     mass: 0.4,
   });
 
-  // Background parallax
+  // ---------- Background parallax ----------
   const y1 = useTransform(scrollYProgress, [0, 1], [0, 100]);
   const y2 = useTransform(scrollYProgress, [0, 1], [0, -80]);
   const y3 = useTransform(scrollYProgress, [0, 1], [0, 50]);
 
-  // Helpers
+  // ---------- Helpers ----------
   function scrollToId(id) {
     const el = document.getElementById(id);
     if (el) {
@@ -129,14 +141,14 @@ export default function FreelanceSOLLanding() {
     setEmail("");
   }
 
-  // Animated text reveal component
+  // ---------- Local UI primitives ----------
   function AnimatedText({ text, className }) {
     const words = text.split(" ");
     return (
       <div className={cn("inline-block", className)}>
         {words.map((word, i) => (
           <motion.span
-            key={i}
+            key={`${word}-${i}`}
             className="inline-block mr-1.5"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -154,7 +166,6 @@ export default function FreelanceSOLLanding() {
     );
   }
 
-  // ✅ FIX: Corrected Typewriter component
   function ReactbitsTypewriter() {
     const phrases = useMemo(
       () => ["Trustless", "Non-custodial", "Gas-efficient", "Escrow-first"],
@@ -196,7 +207,6 @@ export default function FreelanceSOLLanding() {
     );
   }
 
-  // Shimmer gradient border card component
   function AceternityShimmerCard(props) {
     return (
       <div
@@ -205,7 +215,7 @@ export default function FreelanceSOLLanding() {
           props.className
         )}
       >
-        <div className="absolute inset-0 bg-[conic-gradient(from_0deg,rgba(34,211,238,0.28),rgba(147,51,234,0.28),rgba(16,185,129,0.28),rgba(34,211,238,0.28))] animate-[spin_6s_linear_infinite] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div className="absolute inset-0 bg-[conic-gradient(from_0deg,rgba(34,211,238,0.28),rgba(147,51,234,0.28),rgba(16,185,129,0.28),rgba(34,211,238,0.28))] animate-[spin_6s_linear_infinite] opacity-0 group-hover:opacity-100 transition-opacity" />
         <div className="relative rounded-[15px] bg-zinc-900/70 border border-zinc-800 backdrop-blur-xl h-full">
           {props.children}
         </div>
@@ -213,7 +223,6 @@ export default function FreelanceSOLLanding() {
     );
   }
 
-  // 3D Tilt Card component
   function AceternityTiltCard(props) {
     const [rotate, setRotate] = useState({ x: 0, y: 0 });
     const handleMouseMove = (e) => {
@@ -235,14 +244,12 @@ export default function FreelanceSOLLanding() {
         }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        transition={{ type: "spring", stiffness: 400, damping: 20 }}
       >
         {props.children}
       </motion.div>
     );
   }
 
-  // Reveal on scroll component
   function AceternityReveal(props) {
     const ref = useRef(null);
     const isInView = useInView(ref, { once: true, amount: 0.2 });
@@ -256,10 +263,8 @@ export default function FreelanceSOLLanding() {
     const dir = props.direction || "up";
 
     useEffect(() => {
-      if (isInView) {
-        controls.start("visible");
-      }
-    }, [isInView, controls, dir]);
+      if (isInView) controls.start("visible");
+    }, [isInView, controls]);
 
     return (
       <motion.div
@@ -282,7 +287,6 @@ export default function FreelanceSOLLanding() {
     );
   }
 
-  // Feature row checkmark component
   const FeatureRow = ({ text }) => (
     <div className="flex items-center gap-2 text-sm text-zinc-100">
       <Check className="h-4 w-4 text-emerald-400 shrink-0" />
@@ -290,7 +294,6 @@ export default function FreelanceSOLLanding() {
     </div>
   );
 
-  // Floating element component
   function FloatingElement(props) {
     return (
       <motion.div
@@ -310,12 +313,14 @@ export default function FreelanceSOLLanding() {
     );
   }
 
+  // ---------- Render ----------
   return (
     <div className="relative min-h-screen bg-[#0A0A0C] text-zinc-100 font-sans">
       {/* Top scroll progress */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-[3px] z-[60] bg-gradient-to-r from-cyan-400 via-violet-400 to-emerald-400 origin-left"
         style={{ scaleX: width }}
+        aria-hidden="true"
       />
 
       {/* Background parallax */}
@@ -379,7 +384,7 @@ export default function FreelanceSOLLanding() {
                   key={section}
                   variant="ghost"
                   className={cn(
-                    "text-shite transition-colors",
+                    "text-white transition-colors",
                     activeSection === section && "bg-zinc-800/60 text-white"
                   )}
                   onClick={() => scrollToId(section)}
@@ -464,7 +469,7 @@ export default function FreelanceSOLLanding() {
 
       <main>
         {/* Hero */}
-        <section ref={sectionRefs.hero} id="hero" className="relative">
+        <section ref={heroRef} id="hero" className="relative">
           <div className="mx-auto max-w-6xl px-4 pt-16 md:pt-24 pb-20 md:pb-28">
             <div className="grid md:grid-cols-2 gap-10 items-center">
               <div>
@@ -560,10 +565,9 @@ export default function FreelanceSOLLanding() {
                           Milestone
                         </Badge>
                       </div>
-                      {/* ✅ FIX: Correctly using conditional rendering */}
                       {loading && <Skeleton className="h-24 w-full" />}
                       {!loading && (
-                        <div className="h-32 w-full ">
+                        <div className="h-32 w-full">
                           <ContractDraftingVisual />
                         </div>
                       )}
@@ -599,8 +603,6 @@ export default function FreelanceSOLLanding() {
           </div>
         </section>
 
-        {/* The rest of the component remains the same... */}
-
         {/* Logo marquee */}
         <div className="border-y border-zinc-800 bg-[#0A0A0C]/80 backdrop-blur-xl">
           <div className="mx-auto max-w-6xl px-4 py-6">
@@ -618,10 +620,10 @@ export default function FreelanceSOLLanding() {
                   "SolanaFM",
                   "Marinade",
                 ]
-                  .flatMap((item) => [item, item])
+                  .flatMap((item) => [item, item]) // duplicate for seamless loop
                   .map((logo, idx) => (
                     <div
-                      key={idx}
+                      key={`${logo}-${idx}`}
                       className="shrink-0 flex items-center gap-3 text-zinc-300"
                     >
                       <Shield className="h-6 w-6 text-zinc-500" />
@@ -631,14 +633,14 @@ export default function FreelanceSOLLanding() {
                     </div>
                   ))}
               </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-[#0A0A0C] via-transparent to-[#0A0A0C]"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-[#0A0A0C] via-transparent to-[#0A0A0C]" />
             </div>
           </div>
         </div>
 
-        {/* Features (Bento grid) */}
+        {/* Features */}
         <section
-          ref={sectionRefs.features}
+          ref={featuresRef}
           id="features"
           className="mx-auto max-w-6xl px-4 py-20 md:py-28"
         >
@@ -723,7 +725,7 @@ export default function FreelanceSOLLanding() {
 
         {/* Escrow flow */}
         <section
-          ref={sectionRefs.escrow}
+          ref={escrowRef}
           id="escrow"
           className="bg-zinc-950/30 border-y border-zinc-800"
         >
@@ -872,7 +874,7 @@ export default function FreelanceSOLLanding() {
 
         {/* Pricing */}
         <section
-          ref={sectionRefs.pricing}
+          ref={pricingRef}
           id="pricing"
           className="bg-zinc-950/30 border-y border-zinc-800"
         >
@@ -962,7 +964,7 @@ export default function FreelanceSOLLanding() {
 
         {/* FAQ + Waitlist */}
         <section
-          ref={sectionRefs.faq}
+          ref={faqRef}
           id="faq"
           className="mx-auto max-w-4xl px-4 py-20 md:py-28"
         >
@@ -979,7 +981,8 @@ export default function FreelanceSOLLanding() {
               className="mt-3 block text-3xl md:text-5xl font-extrabold tracking-tight"
             />
             <p className="mt-4 text-zinc-400">
-              Can't find what you're looking for? Join our waitlist for updates.
+              Can&apos;t find what you&apos;re looking for? Join our waitlist
+              for updates.
             </p>
           </div>
 
@@ -1094,8 +1097,8 @@ export default function FreelanceSOLLanding() {
                 <div className="mt-6 flex flex-col sm:flex-row gap-3">
                   <Link href="/signup" passHref>
                     <Button
-                      size="lg"
                       className="h-11 px-6 bg-gradient-to-r from-cyan-400 via-violet-500 to-emerald-400 text-zinc-950 hover:opacity-90 transition-opacity duration-300"
+                      size="lg"
                     >
                       Sign Up Free
                     </Button>

@@ -10,6 +10,7 @@ const UserSchema = new mongoose.Schema(
       enum: ["client", "freelancer"],
       default: "client",
     },
+    walletAddress: { type: String, default: null },
   },
   { timestamps: true }
 );

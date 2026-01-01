@@ -12,7 +12,8 @@ import toast from "react-hot-toast";
 export default function ChatPage() {
   const params = useParams();
   const router = useRouter();
-  const { jobId } = params;
+  const { id } = params;
+  const jobId = id; // For backward compatibility
   
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -34,10 +35,10 @@ export default function ChatPage() {
   }, [messages]);
 
   useEffect(() => {
-    if (jobId) {
+    if (id) {
       initializeChat();
     }
-  }, [jobId]);
+  }, [id]);
 
   const initializeChat = async () => {
     try {
@@ -48,13 +49,13 @@ export default function ChatPage() {
       }
       setUser(storedUser);
 
-      const jobRes = await fetch(`/api/jobs/${jobId}`);
+      const jobRes = await fetch(`/api/jobs/${id}`);
       if (jobRes.ok) {
         const jobData = await jobRes.json();
         setJob(jobData);
         
         if (storedUser.userType === "client") {
-          const proposalRes = await fetch(`/api/proposals/job/${jobId}`);
+          const proposalRes = await fetch(`/api/proposals/job/${id}`);
           if (proposalRes.ok) {
             const proposals = await proposalRes.json();
             const acceptedProposal = proposals.find(p => p.isAccepted);
@@ -78,7 +79,7 @@ export default function ChatPage() {
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch(`/api/chat/${jobId}`);
+      const response = await fetch(`/api/chat/${id}`);
       if (response.ok) {
         const data = await response.json();
         setMessages(data);
@@ -127,7 +128,7 @@ export default function ChatPage() {
       const detectedLang = await detectLanguage(newMessage);
       setDetectedLanguage(detectedLang);
 
-      const response = await fetch(`/api/chat/${jobId}`, {
+      const response = await fetch(`/api/chat/${id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -323,4 +324,4 @@ export default function ChatPage() {
       </div>
     </div>
   );
-} 
+}

@@ -32,6 +32,20 @@ export async function POST(req) {
     if (!jobData.skills || jobData.skills.length === 0) {
       delete jobData.skills;
     }
+    
+    // Add escrow information if provided
+    if (jobData.fundEscrow) {
+      jobData.escrow = {
+        funded: false, // Will be updated after blockchain confirmation
+        amount: jobData.budget,
+        currency: "INR",
+        solAmount: jobData.budget / 6000, // Example conversion rate
+      };
+    }
+    
+    // Remove the fundEscrow flag as it's not needed in the database
+    delete jobData.fundEscrow;
+    
     const job = await Job.create({
       ...jobData,
       clientId: decoded.userId,

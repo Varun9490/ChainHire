@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/db";
-import Message from "@/models/Message";
+import { connectDB } from "@/lib/dbConnect";
+import Chat from "@/models/Chat";
 
 export async function GET(request, { params }) {
   try {
-    await connectToDatabase();
+    await connectDB();
     const jobId = params?.jobId || request.nextUrl.searchParams.get("jobId");
 
     if (!jobId) {
@@ -14,7 +14,7 @@ export async function GET(request, { params }) {
       );
     }
 
-    const messages = await Message.find({ jobId })
+    const messages = await Chat.find({ jobId })
       .sort({ timestamp: 1 })
       .populate("sender", "name")
       .lean();
@@ -31,7 +31,7 @@ export async function GET(request, { params }) {
 
 export async function POST(request, { params }) {
   try {
-    await connectToDatabase();
+    await connectDB();
     // Accept jobId from params, query, or body for flexibility
     let jobId = params?.jobId || request.nextUrl?.searchParams?.get("jobId");
     const body = await request.json();
@@ -61,7 +61,7 @@ export async function POST(request, { params }) {
       metadata.dimensions = body.metadata.dimensions;
     }
 
-    const newMessage = await Message.create({
+    const newMessage = await Chat.create({
       jobId,
       messageType,
       content,

@@ -83,15 +83,20 @@ export default function AuthForm({ type }) {
           setTimeout(() => (window.location.href = "/login"), 1500);
         }
       } else {
+        // Show more detailed error message if available
+        const errorMsg = data.details
+          ? `${data.error}: ${data.details}`
+          : data.error || "An unknown error occurred.";
         setNotification({
           type: "error",
-          message: data.error || "An unknown error occurred.",
+          message: errorMsg,
         });
       }
     } catch (error) {
+      console.error("Auth error:", error);
       setNotification({
         type: "error",
-        message: "Could not connect to the server.",
+        message: "Could not connect to the server. Please check if the database is configured properly.",
       });
     } finally {
       setLoading(false);
@@ -251,8 +256,8 @@ export default function AuthForm({ type }) {
                   {loading
                     ? "Processing..."
                     : isLogin
-                    ? "Log In"
-                    : "Sign Up Free"}
+                      ? "Log In"
+                      : "Sign Up Free"}
                 </Button>
               </motion.div>
 
